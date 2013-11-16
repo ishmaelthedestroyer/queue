@@ -1,5 +1,5 @@
-uiAuth
-======
+Queue
+=====
 
 Asynchronous request manager for AngularJs apps. Whenever you create a promise using the $q library, push a copy of the promise to the Queue using `Queue.push(promise)` When it gets resolved or rejected, the Queue will remove it from the queue. A promise can also manually be removed using `Queue.remove(promise)`  Return all promises using `Queue.list()` and clear them using `Queue.clear()`
 
