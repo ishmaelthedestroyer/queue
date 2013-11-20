@@ -4,8 +4,9 @@
   define(['app'], function(app) {
     return app.factory('Queue', [
       '$rootScope', '$timeout', function($rootScope, $timeout) {
-        var apply, queue, remove;
+        var apply, queue, remove, scope;
         queue = [];
+        scope = $rootScope;
         apply = function(scope, fn) {
           if (scope.$$phase || scope.$root.$$phase) {
             return fn();
@@ -14,33 +15,38 @@
           }
         };
         remove = function(promise, callback) {
-          return apply($rootScope, function() {
+          return apply(scope, function() {
             var i, _results;
             i = 0;
             _results = [];
             while (i < queue.length) {
               if (queue[i] === promise) {
                 queue.splice(i, 1);
-                _results.push(typeof callback === "function" ? callback(callback()) : void 0);
-              } else {
-                _results.push(void 0);
+                if (typeof callback === "function") {
+                  callback(callback());
+                }
+                break;
               }
+              _results.push(++i);
             }
             return _results;
           });
         };
         return {
+          setScope: function(s) {
+            return scope = s;
+          },
           list: function() {
             return queue;
           },
           push: function(promise, timeout, callback) {
-            apply($rootScope, function() {
+            apply(scope, function() {
               return queue.push(promise);
             });
             promise.then(function() {
-              return remove(promise);
+              return remove(promise, callback);
             }, function(err) {
-              return remove(promise);
+              return remove(promise, callback);
             });
             if (timeout) {
               return $timeout(function() {
@@ -52,7 +58,7 @@
             return remove(promise);
           },
           clear: function() {
-            return apply($rootScope, function() {
+            return apply(scope, function() {
               return queue = [];
             });
           }

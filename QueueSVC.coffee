@@ -2,10 +2,11 @@ define [
   'app'
 ],(app) ->
   app.factory 'Queue', [
-    '$rootScope'
-    '$timeout'
+    '$rootScope', '$timeout'
     ($rootScope, $timeout) ->
       queue = []
+      scope = $rootScope 
+
       apply = (scope, fn) ->
         if scope.$$phase or scope.$root.$$phase
           fn()
@@ -13,26 +14,30 @@ define [
           scope.$apply fn
 
       remove = (promise, callback) ->
-        apply $rootScope, () ->
+        apply scope, () ->
           i = 0
           while i < queue.length
             if queue[i] is promise
               queue.splice i, 1
               callback? callback()
+              break
+            ++i
 
       # return methods
+      setScope: (s) ->
+        scope = s
       list: () ->
         queue
       push: (promise, timeout, callback) ->
         # add to queue
-        apply $rootScope, () ->
+        apply scope, () ->
           queue.push promise
 
         # when resolved (or rejected), remove from queue
         promise.then () ->
-          remove promise
+          remove promise, callback
         , (err) ->
-          remove promise
+          remove promise, callback
 
         # if timeout set, remove & call optional callback
         if timeout
@@ -42,6 +47,6 @@ define [
       remove: (promise) ->
         remove promise
       clear: () ->
-        apply $rootScope, () ->
+        apply scope, () ->
           queue = []
   ]
